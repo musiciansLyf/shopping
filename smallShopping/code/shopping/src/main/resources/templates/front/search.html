@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>-列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/resource/common/layui/css/layui.css">
+    <link rel="stylesheet" href="/resource/css/index1.css">
+</head>
+<body>
+<style>
+    .goog-te-banner-frame {
+        display: none;
+    }
+</style>
+<div class="house-header">
+    <div class="layui-container">
+        <div class="house-nav">
+     <span class="layui-breadcrumb" lay-separator="|">
+          <!--未登录 -->
+          <div th:if="${isGogin} eq'no'"><a href="login.html">登录</a></div>
+         <!--已登录 -->
+         <div th:if="${isGogin} eq'yes'"><a th:text="${'欢迎 :'+user.userName}"></a><a href="/logout.do">退出</a><a
+                 href="/front/user.do">个人中心</a></div>
+         <!--<a href="">在线客服</a>-->
+      </span>
+            <span class="layui-breadcrumb house-breadcrumb-icon" lay-separator=" ">
+        <a id="search"><i class="layui-icon layui-icon-house-find"></i></a>
+        <a href="login.html"><i class="layui-icon layui-icon-username"></i></a>
+        <a href="usershop.html"><i class="layui-icon layui-icon-house-shop"></i></a>
+      </span>
+        </div>
+        <div class="house-banner layui-form">
+            <a class="banner" href="index.html">
+
+            </a>
+            <div class="layui-input-inline"><input type="text" placeholder="搜索好物" id="searchParam"
+                                                   class="layui-input"><i onclick="searchs()"
+                                                                          class="layui-icon layui-icon-house-find"></i>
+            </div>
+            <a class="shop" href="/front/usershop.do"><i class="layui-icon layui-icon-house-shop"></i><span
+                    class="layui-badge">1</span></a>
+        </div>
+        <div id="google_translate_element"
+             style="position:absolute;bottom:10px;right:10px;z-index:2000;opacity:0.7"></div>
+        <ul class="layui-nav close">
+            <li class="layui-nav-item"><a href="/front/index.do">首页</a></li>
+            <li class="layui-nav-item" th:class="@{'layui-nav-item '+${ptCategory.selected}}"
+                th:each="ptCategory:${ptCategoryList}"><a
+                    th:href="${'/front/list.do?ptCategoryId='+ptCategory.id}"
+                    th:text="${ptCategory.title}">居家用品</a>
+            </li>
+
+        </ul>
+        <button id="switch">
+            <span></span><span class="second"></span><span class="third"></span>
+        </button>
+    </div>
+</div>
+
+<div class="layui-container house-list">
+    <p class="classify"><!--<a href="index.html">首页</a> &gt; <span>家居用品</span>--></p>
+    <div class="list-banner"></div>
+    <div class="filter">
+        <div><span>排序：</span>
+            <ul>
+                <li class="active" onclick="moren(this)">默认</li>
+                <li onclick="priceAsc(this)">价格由低到高</li>
+                <li onclick="priceDesc(this)">价格由高到低</li>
+                <li onclick="createdTime(this)">上架时间</li>
+            </ul>
+        </div>
+    </div>
+    <div class="layui-row layui-col-space25" id="productList">
+
+    </div>
+    <div id="test1" style="margin-top: 70px;margin-bottom: 80px;text-align: center"></div>
+</div>
+
+<div class="house-footer">
+    <div class="layui-container">
+        <div class="intro">
+            <span class="first"><i class="layui-icon layui-icon-house-shield"></i>7天无理由退换货</span>
+            <span class="second"><i class="layui-icon layui-icon-house-car"></i>满99元全场包邮</span>
+            <span class="third"><i class="layui-icon layui-icon-house-diamond"></i>100%品质保证</span>
+            <span class="last"><i class="layui-icon layui-icon-house-tel"></i>客服400-2888-966</span>
+        </div>
+        <div class="about">
+      <span class="layui-breadcrumb" lay-separator="|">
+        <a href="about.html">关于我们</a>
+        <a href="about.html">帮助中心</a>
+        <a href="about.html">售后服务</a>
+        <a href="about.html">配送服务</a>
+        <a href="about.html">关于货源</a>
+      </span>
+            <p>版权所有 &copy; 2012-2020</p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="/resource/common/layui/layui.js"></script>
+<script type="text/javascript" src=" /resource/js/user.js"></script>
+<script type="text/javascript" src=" /resource/js/internationalization.js"></script>
+<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+<!--[if lt IE 9]>
+<script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+<script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+<script>
+    layui.config({
+        base: '/resource/js/'
+    }).use('house');
+</script>
+<script type="text/javascript" th:inline="javascript">
+    var priceAsc;
+    var priceDesc;
+    var createdTime;
+    var moren;
+    var categoryGetList;
+    layui.use(['table', 'layer', 'laydate', 'laypage', 'form'], function () {
+        var table = layui.table,
+            $ = layui.$,
+            layer = layui.layer,
+            laypage = layui.laypage,
+            form = layui.form;
+        var count = [[${count}]]
+        var paramSearch = [[${paramSearch}]]
+        var orderBy;
+        var categoryId;
+        var page = 1;
+        laypage.render({
+            elem: 'test1' //注意，这里的 test1 是 ID，不用加 # 号
+            , count: count //数据总数，从服务端得到
+            , theme: '#daba91'
+            , limit: 20
+            , jump: function (obj, first) {
+                //obj包含了当前分页的所有参数，比如：
+                console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。
+                console.log(obj.limit); //得到每页显示的条数
+                page = obj.curr
+                showProduct(obj.curr, obj.limit, orderBy, categoryId)
+            }
+        });
+
+        //分类选择
+        categoryGetList = function (a) {
+            categoryId = a.getAttribute("id");
+            showProduct(page, 20, orderBy, categoryId);
+        }
+        //价格升序
+        priceAsc = function () {
+            orderBy = 'proPrice asc'
+            showProduct(page, 20, orderBy, categoryId);
+        }
+        //价格降序
+        priceDesc = function () {
+            orderBy = 'proPrice desc'
+            showProduct(page, 20, orderBy, categoryId);
+        }
+        //时间降序
+        createdTime = function () {
+            orderBy = 'createdTime desc'
+            showProduct(page, 20, orderBy, categoryId);
+        }
+        //默认
+        moren = function () {
+            orderBy = null;
+            showProduct(page, 20, orderBy, categoryId);
+
+        }
+
+        //商品列表ajax加载的方法
+        function showProduct(page, limit, orderBy, categoryId) {
+            $.ajax({
+                url: '/product/productList.do',
+                type: 'post',
+                data: {"page": page, "limit": limit, "orderBy": orderBy, "categoryId": categoryId, "name": paramSearch},
+                dataType: 'json',
+                async: false,
+                success: function (result) {
+                    if (result.status) {
+                        //存在商品
+                        $("#productList").html("");
+                        var list = result.obje;//商品集合
+                        var src = ''
+                        for (var i = 0; i < list.length; i++) {
+                            var product = list[i];//单个商品对象
+                            src += '<div class="layui-col-xs6 layui-col-sm3">';
+                            src += '   <div class="list-detail">';
+                            src += '       <div class="img"><img src="' + product.imgUrl + '"></div>';
+                            src += '           <p class="title"><a href="/front/detail.do?productId=' + product.id + '">' + product.name + '</a></p>';
+                            src += '           <p><span class="price">￥' + product.proPrice + '</span><span>' + product.sales + '</span>人付款</p>';
+                            src += '   </div>';
+                            src += ' </div>';
+                        }
+                        $("#productList").append(src);
+                    } else {
+                        //不存在商品
+
+                    }
+                }
+
+            });
+        }
+    });
+</script>
+</body>
+</html>

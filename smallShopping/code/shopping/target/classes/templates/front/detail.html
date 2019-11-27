@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>-详情</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/resource/common/layui/css/layui.css">
+    <link rel="stylesheet" href="/resource/css/index1.css">
+</head>
+<body>
+<style>
+    .goog-te-banner-frame {
+        display: none;
+    }
+</style>
+<div class="house-header">
+    <div class="layui-container">
+        <div class="house-nav">
+     <span class="layui-breadcrumb" lay-separator="|">
+          <!--未登录 -->
+          <div th:if="${isGogin} eq'no'"><a href="login.html">登录</a></div>
+         <!--已登录 -->
+           <div th:if="${isGogin} eq'yes'"><a th:text="${'欢迎 :'+user.userName}"></a><a href="/logout.do">退出</a><a
+                   href="/front/user.do">个人中心</a></div>
+         <!--<a href="">在线客服</a>-->
+      </span>
+            <span class="layui-breadcrumb house-breadcrumb-icon" lay-separator=" ">
+        <a id="search"><i class="layui-icon layui-icon-house-find"></i></a>
+        <a href="login.html"><i class="layui-icon layui-icon-username"></i></a>
+        <a href="usershop.html"><i class="layui-icon layui-icon-house-shop"></i></a>
+      </span>
+        </div>
+        <div class="house-banner layui-form">
+            <a class="banner" href="index.html">
+
+            </a>
+            <div class="layui-input-inline"><input type="text" placeholder="搜索好物" id="searchParam"
+                                                   class="layui-input"><i onclick="searchs()"
+                                                                          class="layui-icon layui-icon-house-find"></i>
+            </div>
+            <a class="shop" href="/front/usershop.do"><i class="layui-icon layui-icon-house-shop"></i><span
+                    class="layui-badge">1</span></a>
+        </div>
+        <div id="google_translate_element"
+             style="position:absolute;bottom:10px;right:10px;z-index:2000;opacity:0.7"></div>
+        <ul class="layui-nav close">
+            <li class="layui-nav-item"><a href="/front/index.do">首页</a></li>
+            <li class="layui-nav-item" th:class="@{'layui-nav-item '+${ptCategory.selected}}"
+                th:each="ptCategory:${ptCategoryList}"><a
+                    th:href="${'/front/list.do?ptCategoryId='+ptCategory.id}"
+                    th:text="${ptCategory.title}">居家用品</a>
+            </li>
+
+        </ul>
+        <button id="switch">
+            <span></span><span class="second"></span><span class="third"></span>
+        </button>
+    </div>
+</div>
+
+<div class="layui-container house-detail">
+    <p class="title"><!--<a href="index.html">首页</a> &gt; <a href="list.html">家居用品</a> &gt; <span>产品详情</span>--></p>
+    <div class="layui-row price">
+        <div class="layui-col-sm6">
+            <div class="intro-img"><img th:src="${product.imgUrl}"></div>
+            <ul class="thumb">
+                <li><img th:src="${product.imgUrl}"></li>
+                <li th:each="img:${imgTitle}"><img th:src="${img}"></li>
+            </ul>
+        </div>
+        <div class="layui-col-sm6 shopChoose">
+            <div class="title"><p><span class="layui-badge">新品</span><b th:text="${product.name}"></b></p>&nbsp;&nbsp;&nbsp;<span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <p><span>￥<big><b th:text="${product.proPrice}">199</b></big></span>原价￥<big>
+                <del th:text="${product.price}">399</del>
+            </big></p>
+            <dl id="parameterList">
+                <dt>颜色</dt>
+                <dd th:each="parameter:${listParameter}" th:text="${parameter}">白色</dd>
+            </dl>
+            <dl id="specificationList">
+                <dt>尺寸</dt>
+                <dd th:each="specification:${listSpecification}" th:text="${specification}">
+                    mi
+                </dd>
+            </dl>
+            <div class="number layui-form">
+                <label>数量</label>
+                <div class="layui-input-inline btn-input">
+                    <button class="layui-btn layui-btn-primary sup">-</button>
+                    <input type="text" id="number" class="layui-input">
+                    <button class="layui-btn layui-btn-primary sub">+</button>
+                </div>
+                <p class="inputTips">已超出库存数量！</p>
+            </div>
+            <div class="shopBtn">
+                <button class="layui-btn layui-btn-primary sale" onclick="buy()">立即购买</button>
+                <button class="layui-btn shop" onclick="inCarts()"><i class="layui-icon layui-icon-house-shop"></i>加入购物车
+                </button>
+                <button class="layui-btn layui-btn-primary collect"><i class="layui-icon layui-icon-rate"
+                                                                       id="collect"></i>收藏
+                </button>
+            </div>
+        </div>
+        <!--支付确认窗口-->
+        <div id="payDiv" hidden>
+            <div class="layui-col-sm6 shopChoose">
+                <div class="title"><p><b></b></p>&nbsp;&nbsp;&nbsp;<span>&nbsp;&nbsp;&nbsp;</span>
+                </div>
+                <p>总金额:<span>￥<big><b id="zum">199</b></big></span></p>
+                <dl id="">
+                    <dt>支付方式:</dt>
+                    <!-- <dd class="active">支付宝</dd>
+                     <dd>微信</dd>-->
+                    <dd>账户余额</dd>
+                </dl>
+                <div style="margin-top: 30%">
+                    <button class="layui-btn" onclick="yesS()" style="background-color: #dbbb92">确认</button>
+                    <button class="layui-btn" onclick="closeS()" style="background-color: #dbbb92">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-row layui-col-space30">
+        <div class="layui-col-sm8 detailTab">
+            <div class="layui-tab layui-tab-brief">
+                <ul class="layui-tab-title">
+                    <li class="layui-this">详情</li>
+                    <li>评论 <span th:text="${'('+evaluateListSize+')'}">(120)</span></li>
+                </ul>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+                        <img th:each="img:${allImg}" th:src="${img}">
+                    </div>
+                    <div class="layui-tab-item">
+                        <div class="comment">
+                            <ul>
+                                <li th:each="evaluate:${evaluateList}">
+                                    <div class="img"><!--<img src=/resource/image/person.png">--><span
+                                            th:text="${evaluate.user.userName}"></span></div>
+                                    <p class="txt" th:text="${evaluate.content}">质量还可以！纯棉的，盖着挺舒服的，对皮肤也好。</p>
+                                    <p class="time" style="top:60px"
+                                       th:text="${#strings.substring(evaluate.time,0,19)}">2018年05月02日 11:20</p>
+                                </li>
+                            </ul>
+                            <div id="detailList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm4 detailCom">
+            <p class="title">热销推荐</p>
+            <ul class="detailCom-content hot-sell">
+                <li th:each="sales:${salesList}"><a class="text" th:href="${'/front/detail.do?productId='+sales.id}">
+                    <div><img th:src="${sales.imgUrl}"></div>
+                    <p th:text="${sales.name}">森系小清新四件套</p>
+                    <p class="price" th:text="${'￥'+sales.proPrice}">￥200</p>
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="house-footer">
+    <div class="layui-container">
+        <div class="intro">
+            <span class="first"><i class="layui-icon layui-icon-house-shield"></i>7天无理由退换货</span>
+            <span class="second"><i class="layui-icon layui-icon-house-car"></i>满99元全场包邮</span>
+            <span class="third"><i class="layui-icon layui-icon-house-diamond"></i>100%品质保证</span>
+            <span class="last"><i class="layui-icon layui-icon-house-tel"></i>客服400-2888-966</span>
+        </div>
+        <div class="about">
+      <span class="layui-breadcrumb" lay-separator="|">
+        <a href="about.html">关于我们</a>
+        <a href="about.html">帮助中心</a>
+        <a href="about.html">售后服务</a>
+        <a href="about.html">配送服务</a>
+        <a href="about.html">关于货源</a>
+      </span>
+            <p>版权所有 &copy; 2012-2020</p>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="/resource/common/layui/layui.js"></script>
+<script type="text/javascript" src=" /resource/js/user.js"></script>
+<script type="text/javascript" src=" /resource/js/internationalization.js"></script>
+<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+<!--[if lt IE 9]>
+<script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+<script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+<script>
+    layui.config({
+        base: '/resource/js/'
+    }).use('house');
+</script>
+<script type="text/javascript" th:inline="javascript">
+    var buy;
+    var pointParam;
+    var pointSpecifi;
+    var closeS;
+    var yesS;
+    var inCarts;
+    var searchs;
+    layui.use(['table', 'layer', 'laydate', 'laypage', 'form'], function () {
+        var table = layui.table,
+            $ = layui.$,
+            layer = layui.layer,
+            laypage = layui.laypage,
+            form = layui.form;
+        var product = [[${product}]]
+        var number;
+        //默认参数选中
+        $("#parameterList dd:first").attr('class', 'active parameterSelected');
+        $("#specificationList dd:first").attr('class', 'active specificationSelected');
+        var parameter = $("#parameterList .active").text();
+        var specification = $("#specificationList .active").text();
+        //加入购物车操作
+        inCarts = function () {
+            number = $("#number").val();
+            console.log("加入购物车操作")
+            console.log()
+            $.ajax({
+                url: '/front/inCart.do',
+                type: 'post',
+                data: {
+                    "proPrice": product.proPrice,
+                    "price": product.price,
+                    "productId": product.id,
+                    "imgUrl": product.imgUrl,
+                    "number": number,
+                    "parameter": parameter,
+                    "specification": specification
+                },
+                dataType: 'json',
+                async: false,
+                success: function (result) {
+                    if (!result.status) {
+                        parent.layer.msg(result.msg, {time: 2000});
+                        return false;
+                    } else {
+                        layer.msg("放入购物车成功!", {time: 1000});
+                        window.location.href = "/front/usershop.do"
+                    }
+                }
+            });
+        }
+        //购买操作
+        var index;
+        buy = function () {
+            //修改成用户所选的参数和规格
+            var parameter = $("#parameterList .active").text();
+            var specification = $("#specificationList .active").text();
+            console.log(parameter + specification);
+            product.specification = specification;
+            product.parameter = parameter;
+            number = $("#number").val();
+            $("#zum").text(number * product.proPrice)
+            index = layer.open({
+                type: 1,
+                title: "确认订单",
+                shadeClose: false, //点击遮罩关闭层
+                area: ['50%', '50%'],
+                content: $("#payDiv"),
+            });
+        }
+        yesS = function () {
+            console.log(JSON.stringify(product))
+            console.log(product.proPrice)
+            //购买操作
+            $.ajax({
+                url: '/front/buy.do',
+                type: 'post',
+                data: {
+                    "proPrice": product.proPrice,
+                    "productId": product.id,
+                    "imgUrl": product.imgUrl,
+                    "number": number
+                },
+                dataType: 'json',
+                async: false,
+                success: function (result) {
+                    if (!result.status) {
+                        parent.layer.msg(result.msg, {time: 2000});
+                        return false;
+                    } else {
+                        layer.msg("购买成功!", {time: 1000});
+                        window.location.href = "/front/user.do"
+                    }
+                }
+            });
+        }
+        closeS = function () {
+            console.log("close");
+            layer.close(index)
+        }
+
+        searchs = function () {
+            var paramSearch = $("#searchParam").val();
+            window.location.href = '/front/search.do?paramSearch=' + paramSearch;
+        }
+    });
+</script>
+</body>
+</html>

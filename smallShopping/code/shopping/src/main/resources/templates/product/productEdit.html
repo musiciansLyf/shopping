@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="stylesheet" href="/resource/common/layui/css/layui.css" media="all"/>
+    <link rel="stylesheet" href="/resource/css/common.css" media="all"/>
+</head>
+<body class="index">
+<style>
+    .label-text {
+        text-align: right;
+    }
+</style>
+<form class="layui-form" action="" style="margin:auto;margin-top:30px">
+    <div class="layui-row layui-col-md6">
+        <div class="layui-row">
+            <div class="layui-col-md8">
+                <label class="layui-col-md3 label-text">商品名称:</label>
+                <div class="layui-col-md9">
+                    <input hidden name="id" th:value="${product.id}">
+                    <input id="name" name="name" th:value="${product.name}" class="layui-input"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-row" style="margin-top: 20px">
+            <div class="layui-col-md4">
+                <label class="layui-col-md6 label-text">原价¥:</label>
+                <div class="layui-col-md6">
+                    <input id="price" type="number" name="price" th:value="${product.price}" class="layui-input"/>
+                </div>
+            </div>
+            <div class="layui-col-md4">
+                <label class="layui-col-md6 label-text">折扣价¥:</label>
+                <div class="layui-col-md6">
+                    <input id="proPrice" type="number" name="proPrice" th:value="${product.proPrice}"
+                           class="layui-input"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top: 20px;">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit="" lay-filter="Submit">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </div>
+</form>
+<script type="text/javascript" src="/resource/common/layui/layui.js"></script>
+<script type="text/javascript" src=" /resource/js/user.js"></script>
+<script type="text/javascript">
+
+
+    layui.use(['table', 'layer', 'laydate', 'form', 'upload', 'colorpicker'], function () {
+        var table = layui.table,
+            $ = layui.$,
+            layer = layui.layer,
+            form = layui.form;
+        form.on('submit(Submit)', function (data) {
+            $.ajax({
+                url: '/product/product.do',
+                type: 'put',
+                data: data.field,
+                dataType: 'json',
+                async: false,
+                success: function (result) {
+                    if (!result.status) {
+                        parent.layer.msg(result.msg, {time: 2000});
+                        return false;
+                    } else {
+                        layer.msg("修改成功!", {time: 1000});
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));
+                        parent.layui.table.reload('tableId', {});
+                    }
+                }
+            });
+        });
+    });
+
+</script>
+
+</body>
+</html>

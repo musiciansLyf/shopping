@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>采购计划</title>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="stylesheet" href="/resource/common/layui/css/layui.css" media="all"/>
+    <link rel="stylesheet" href="/resource/css/common.css" media="all"/>
+</head>
+<style>
+    .layui-form-item {
+        width: 350px;
+    }
+</style>
+<body>
+<blockquote class="layui-elem-quote quoteBox layui-form">
+    <div class="layui-form">
+        <div class="layui-row ">
+            <div class="layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名：</label>
+                    <div class="layui-inline">
+                        <div class="layui-input-inline">
+                            <select id="userId" name="userId" lay-filter="userId">
+                                <option th:value="${userId}">请选择</option>
+                                <option th:each="user:${userList}" th:text="${user.userName}"
+                                        th:value="${user.userName}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md2">
+                <div class="layui-inline tableId">
+                    <button class="layui-btn" data-type="reload" id="search">搜索</button>
+                    <button class="layui-btn revocation" data-type="reload" id="revocation">撤销</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</blockquote>
+<table id="planTables" lay-filter="planTables"></table>
+
+<script type="text/javascript" src="/resource/common/layui/layui.js"></script>
+<script type="text/javascript" src=" /resource/js/user.js"></script>
+<script type="text/javascript" th:inline="javascript">
+
+
+    layui.use(['table', 'layer', 'laydate', 'form'], function () {
+        var table = layui.table,
+            $ = layui.$,
+            layer = layui.layer,
+            form = layui.form;
+        var userId = [[${userId}]];
+        var otherHeight = Math.ceil($("blockquote").height() + 20);
+        var tableIns = table.render({
+            elem: '#planTables'
+            , height: 'full-' + otherHeight
+            , url: '/attendance/attendanceTable.do' //数据接口
+            , method: 'get'
+            , where: {
+                userId: userId
+            }
+            , toolbar: '#header'
+            , page: true //开启分页
+            , id: 'tableId'
+            , limits: [10, 15, 30]
+            , limit: 15
+            , cols: [
+                [ //表头
+                    , {field: 'data', title: '日期'}
+                    , {field: 'amWork', title: '上午上班'}
+                    , {field: 'amSleep', title: '上午下班'}
+                    , {field: 'pmWork', title: '下午上班'}
+                    , {field: 'pmSleep', title: "下午下班"}
+                ]
+            ]
+        });
+        //搜索
+        $('#search').on('click', function () {
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+        //撤销
+        $("#revocation").on('click', function () {
+            $("#userId option:first").prop("selected", true);
+            form.render();
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : ''
+        });
+        active = {
+            reload: function () {
+                userId = $("#userId").val();
+                console.log(userId);
+                //执行重载
+                table
+                    .reload('tableId', {
+                        page: {
+                            curr: 1 //重新从第 1 页开始
+                        }
+                        , where: {
+                            userId: userId
+                        }
+                    });
+            }
+        };
+    });
+</script>
+
+</body>
+</html>
